@@ -1,19 +1,20 @@
 //やることリスト
-//横方向への移動
 //羽ばたき
 
 const gravity = 1;//const型は変更不可
 let terrains,texts;//グループ
-let bodyImg, headImg,legImg;
+let bodyImg, headImg,legImg,tailImg;
 let headDirection = 0;//頭の角度
 let headSpead = 0.1;//頭の角度を変更するスピード
 let keyWalkR = pKeyWalkR = keyWalkL = pKeyWalkL = 0;
+let playerDirection = true;//playerのむいている向き　true:right false:left
 
 //preload 画像の呼び出しに使う
 function preload() {
   bodyImg = loadImage('img/bird_body.png');
   headImg = loadImage('img/bird_head.png');
   legImg = loadImage('img/bird_leg.png');
+  tailImg = loadImage('img/bird_tail.png');
 }
 
 function setup() {
@@ -34,6 +35,7 @@ function setup() {
 function draw() {
   background(180,25,80);
 
+  ptail();
   pMove();
   pHead();
   textsDraw();
@@ -54,12 +56,16 @@ function pMove() {
   } else {//障害物に接していないとき、重力を受ける
     playerSprite.addSpeed(gravity, 90);//下方向へのスピードを加速
   }
+
+  if (90 <= playerSprite.getDirection() &&playerSprite.getDirection() < 270) playerDirection = false;
+  else playerDirection = true;
 }
 
 //playerのheadに関する関数
 function pHead() {
   push();
   translate(playerSprite.position.x, playerSprite.position.y - playerSprite.height / 4 * 3);//座標平面をplayerSpriteの頭部分に移動
+    if (!playerDirection) scale(-1, 1);
   rotate(-radians(headDirection));//headDirection分回転
   translate(headImg.width / 4, 0);//X座標の調整
   if (headDirection > 90) scale(1, -1);//もし後ろを向いていたら上下反転
@@ -80,21 +86,39 @@ function pHead() {
 //playerのlegに関する変数
 function pLeg() {
   push();
-  translate(playerSprite.position.x - playerSprite.width / 4, playerSprite.position.y+playerSprite.height/5);
+  translate(playerSprite.position.x - playerSprite.width / 6, playerSprite.position.y+playerSprite.height/6);
   rotate(radians(map(keyWalkL, 0, 3, -45, 45)));
   rotate(radians(map(keyWalkR, 0, 3, 15, -15)));
   translate(0, legImg.height / 2);
+  if (!playerDirection) scale(-1, 1);
   imageMode(CENTER);
   image(legImg, 0, 0);
   pop();
 
   push();
-  translate(playerSprite.position.x + playerSprite.width / 4, playerSprite.position.y+playerSprite.height/5);
+  translate(playerSprite.position.x + playerSprite.width / 6, playerSprite.position.y+playerSprite.height/6);
   rotate(radians(map(keyWalkR, 0, 3, 45, -45)));
   rotate(radians(map(keyWalkL, 0, 3, -15, 15)));
   translate(0, legImg.height / 2);
+  if (!playerDirection) scale(-1, 1);
   imageMode(CENTER);
   image(legImg, 0, 0);
+  pop();
+}
+
+function ptail(){
+  push();
+  translate(playerSprite.position.x, playerSprite.position.y);
+  if (playerDirection) {
+    translate(-playerSprite.width / 3, 0);
+  } else {
+    translate(playerSprite.width / 3, 0);
+    scale(-1, 1);
+  }
+  rotate(radians(min(map(playerSprite.getSpeed(), 0, 10, 0, 120), 120)));
+  translate(0, tailImg.height / 2);
+  imageMode(CENTER);
+  image(tailImg, 0, 0);
   pop();
 }
 
