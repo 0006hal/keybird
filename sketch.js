@@ -8,6 +8,9 @@ let flySpeed = flySpeedDefault;//飛ぶスピード
 let keyWalkR = pKeyWalkR = keyWalkL = pKeyWalkL = 0;
 let keyFlyR = pKeyFlyR = keyFlyL = pKeyFlyL = 0;
 let playerDirection = true;//playerのむいている向き　true:right false:left
+let flyFlag = false;//trueなら飛んでいる
+
+let camTargetX, camTargetY;
 
 //preload 画像の呼び出しに使う
 function preload() {
@@ -31,11 +34,15 @@ function setup() {
   groundSprite = createSprite(width / 2, height, width, 200);//地面のスプライト
   groundSprite.immovable = true;//immovable:trueで動かなくなる
   groundSprite.addToGroup(terrains);
+
+  camTargetX = playerSprite.position.x;
+  camTargetY = playerSprite.position.y;
 }
 
 function draw() {
   background(180,25,80);
 
+  cameraFunction();
   ptail();
   pMove();
   textsDraw();
@@ -44,6 +51,27 @@ function draw() {
   pHead();
   pLeg();
   test();
+}
+
+//cameraに関する変数
+function cameraFunction() {
+  let zoomTarget = 1;
+  //閾値を越えるほどはなれたらtargetを設定
+  if (abs(playerSprite.position.x - camera.position.x) > width / 4) {
+    camTargetX = playerSprite.position.x;
+  }
+
+  if (abs(playerSprite.position.y - camera.position.y+height/4) > height / 4) {
+    camTargetY = playerSprite.position.y-height/4;
+  }
+
+  //targetに向かってじわじわと寄る
+  camera.position.x += (camTargetX - camera.position.x) / 10;
+  camera.position.y += (camTargetY - camera.position.y) / 10;
+
+  //飛行モードならズームアウトし、陸上なら戻す
+  if (flyFlag) { camera.zoom=max(camera.zoom*0.98,0.4) }
+  else { camera.zoom=min(camera.zoom*1.005,1) }
 }
 
 //playerの移動に関する関数
@@ -59,9 +87,11 @@ function pMove() {
     }
   } else {//障害物に接していないとき、重力を受ける
     flySpeed *= 0.9;//flySpeedが下がる
-    if (flySpeed < flySpeedDefault/10) {//飛行状態でないなら重力を受ける
+    if (flySpeed < flySpeedDefault / 10) {//飛行状態でないなら重力を受ける
+      flyFlag = false;
       playerSprite.addSpeed(gravity, 90);//下方向へのスピードを加速
     } else {
+      flyFlag = true;
       playerSprite.addSpeed(gravity/10, 90);//飛行状態なら重力を軽減する
     }
   }
@@ -285,6 +315,4 @@ function keyPressed() {
 //テストするための場所
 function test() {
   // rect(playerSprite.position.x, playerSprite.position.y, playerSprite.width, playerSprite.height);//positionと大きさの確認→ポジションは中央
-  // console.log("rotation:" + playerSprite.rotation);
-  // console.log("flySpeed:" + flySpeed);
 }
